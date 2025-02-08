@@ -48,6 +48,21 @@ class PatternEdge(SQLModel, table=True):
     trigger: str = PatternEdgeTrigger.auto
 
 
+class NodeHook(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
+    node_id: int | None = Field(default=None, foreign_key="patternnode.id")
+    hook_class: str
+    # `hook_class` corresponds to an existing python class implementing the BaseHook interface
+    # /!\ This is extremely unsafe as we are manipulating objects as strings
+    #
+    # Example:
+    # > class EmailNotifyHook(BaseHook):
+    # >     def on_validated(self, element):
+    # >         ...
+    # >     def on_stall(self, element, nb_days):
+    # >         ...
+
+
 class PatternNode(SQLModel, table=True):
     """
     brief: Step of a workflow pattern.
@@ -82,6 +97,8 @@ class PatternNode(SQLModel, table=True):
         ),
     )
     # /!\ In joins, use pascal case for tables, because it's at the ORM/python level
+
+    hooks: list[NodeHook] = Relationship(back_populates="node")
 
     dataform_pydantic_str: str
     # `dataform_pydantic_str` corresponds to an existing pydantic BaseModel which
