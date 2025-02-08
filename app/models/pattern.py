@@ -1,103 +1,87 @@
 from enum import Enum
 
-from sqlmodel import JSON, Column, Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 
-class Pattern(SQLModel, table=True):
+class WorkflowPattern(SQLModel, table=True):
     """
-    brief: A pattern of a workflow. Users should be able to create instances of this pattern - workflows.
+    brief: A pattern of a workflow. Users should be able to create instances of this pattern.
     """
 
     id: int = Field(default=None, primary_key=True)
     name: str
     description: str | None = None
     is_active: bool = Field(default=True)
-
-    steps: list["PatternStep"] = Relationship(back_populates="pattern")
-    instances: list["Instance"] = Relationship(back_populates="pattern")
+    nodes: list["patternnode"] = Relationship(back_populates="workflow_pattern")
 
 
-class StepEdge(SQLModel, table=True):
+class PatternEdgeTrigger(str, Enum):
+    auto = "auto"  # Unlocks `next` on prev validation status.
+    on_choice = (
+        "on_choice"  # Like `auto`, if user chose this path from all possible edges.
+    )
+
+
+class PatternEdge(SQLModel, table=True):
     """
-    brief: Links PatternSteps to create a dependency graph.
+    brief: Links PatternNodes to create a dependency graph.
     """
 
     prev_id: int | None = Field(
         default=None,
-        foreign_key="patternstep.id",
+        foreign_key="patternnode.id",
         primary_key=True,
     )
     next_id: int | None = Field(
         default=None,
-        foreign_key="patternstep.id",
+        foreign_key="patternnode.id",
         primary_key=True,
     )
+    trigger: str = PatternEdgeTrigger.auto
 
 
-class StepForm(SQLModel, table=True):
-    """
-    brief: Form associated with a step.
-    """
-
-    id: int = Field(default=None, primary_key=True)
-    steps: list["PatternStep"] = Relationship(back_populates="form")
-    fields: list["FormField"] = Relationship(back_populates="step_form")
-
-
-class BaseFieldEntryType(str, Enum):
-    boolean = "boolean"
-    text = "text"
-    number = "number"
-    date = "date"
-    unique_choice = "unique_choice"
-    multiple_choice = "multiple_choice"
-
-
-class FormField(SQLModel, table=True):
-    """
-    brief: Fields of a step's form.
-    """
-
-    id: int = Field(default=None, primary_key=True)
-    step_form_id: int | None = Field(default=None, foreign_key="stepform.id")
-    step_form: StepForm | None = Relationship(back_populates="fields")
-    label: str
-    description: str | None = None
-    is_required: bool = False
-    entry_type: str = BaseFieldEntryType.boolean
-    entry_props: dict = Field(sa_column=Column(JSON), default_factory=dict)
-
-
-class PatternStep(SQLModel, table=True):
+class PatternNode(SQLModel, table=True):
     """
     brief: Step of a workflow pattern.
     """
 
     id: int = Field(default=None, primary_key=True)
-    pattern_id: int | None = Field(default=None, foreign_key="pattern.id")
-    pattern: Pattern | None = Relationship(back_populates="steps")
+    workflow_pattern_id: int | None = Field(
+        default=None,
+        foreign_key="workflowpattern.id",
+    )
+    workflow_pattern: WorkflowPattern | None = Relationship(back_populates="nodes")
 
     name: str
     description: str | None = None
     category: str
     is_active: bool = Field(default=True)
 
-    prev: list["PatternStep"] = Relationship(
-        link_model=StepEdge,
+    prev: list["patternnode"] = Relationship(
+        link_model=PatternEdge,
         back_populates="next",
         sa_relationship_kwargs=dict(
-            primaryjoin="patternstep.id==stepedge.next_id",
-            secondaryjoin="patternstep.id==stepedge.prev_id",
+            primaryjoin="patternnode.id==patternedge.next_id",
+            secondaryjoin="patternnode.id==patternedge.prev_id",
         ),
     )
-    next: list["PatternStep"] = Relationship(
-        link_model=StepEdge,
+    next: list["patternnode"] = Relationship(
+        link_model=PatternEdge,
         back_populates="prev",
         sa_relationship_kwargs=dict(
-            primaryjoin="patternstep.id==stepedge.prev_id",
-            secondaryjoin="patternstep.id==stepedge.next_id",
+            primaryjoin="patternnode.id==patternedge.prev_id",
+            secondaryjoin="patternnode.id==patternedge.next_id",
         ),
     )
 
-    form_id: int | None = Field(default=None, foreign_key="stepform.id")
-    form: StepForm | None = Relationship(back_populates="steps")
+    dataform_pydantic_str: str
+    # `dataform_pydantic_str` corresponds to an existing pydantic BaseModel which
+    # should be used for data serialization on this node.
+    # /!\ This is extremely unsafe as we are manipulating objects as strings
+    #
+    # Example:
+    # > class UserDataForm(BaseModel):
+    # >     first_name: str
+    # >     last_name: str
+
+    elements: list["InstanceElement"] = Relationship(back_populates="pattern_node")

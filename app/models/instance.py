@@ -1,40 +1,49 @@
+from datetime import datetime
 from enum import Enum
 
 from sqlmodel import JSON, Column, Field, Relationship, SQLModel
 
-from .pattern import Pattern, PatternStep
+from .pattern import PatternNode, WorkflowPattern
 
 
-class Instance(SQLModel, table=True):
-    """
-    brief: An instance of a workflow pattern.
-    """
-
+class WorkflowInstance(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    pattern_id: int | None = Field(default=None, foreign_key="pattern.id")
-    pattern: Pattern | None = Relationship(back_populates="instances")
+    workflow_pattern_id: int | None = Field(
+        default=None,
+        foreign_key="workflowpattern.id",
+    )
+    workflow_pattern: WorkflowPattern | None = Relationship(back_populates="nodes")
 
-    steps: list["StepInstance"] = Relationship(back_populates="instance_id")
+    created_at: datetime
+    created_by: str
+    updated_at: datetime
+    updated_by: str
+    elements: list["InstanceElement"] = Relationship(back_populates="workflow_instance")
 
 
-class StepStatus(str, Enum):
+class InstanceElementStatus(str, Enum):
     blocked = "blocked"
     ongoing = "ongoing"
     completed = "completed"
     validated = "validated"
+    archived = "archived"
 
 
-class StepInstance(SQLModel, table=True):
-    """
-    brief: An instance of a step. Contains end-data.
-    """
-
+class InstanceElement(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    instance_id: int | None = Field(default=None, foreign_key="instance.id")
-    instance: Instance | None = Relationship(back_populates="steps")
+    workflow_instance_id: int | None = Field(
+        default=None,
+        foreign_key="workflowinstance.id",
+    )
+    workflow_instance: WorkflowInstance | None = Relationship(back_populates="elements")
+    pattern_node_id: int | None = Field(
+        default=None,
+        foreign_key="patternnode.id",
+    )
+    pattern_node: PatternNode | None = Relationship(back_populates="elements")
 
-    pattern_step_id: int | None = Field(default=None, foreign_key="patternstep.id")
-    pattern_step: PatternStep | None = Relationship(back_populates="instances")
+    updated_at: datetime
+    updated_by: str
 
-    status: str = StepStatus.blocked
-    data: dict = Field(sa_column=Column(JSON), default_factory=dict)
+    dataform: dict = Field(sa_column=Column(JSON), default_factory=dict)
+    # `dataform` implements the pattern_node's `dataform_pydantic` model.
