@@ -12,7 +12,10 @@ class WorkflowPattern(SQLModel, table=True):
     name: str
     description: str | None = None
     is_active: bool = Field(default=True)
-    nodes: list["patternnode"] = Relationship(back_populates="workflow_pattern")
+    nodes: list["PatternNode"] = Relationship(back_populates="workflow_pattern")
+    instances: list["WorkflowInstance"] = Relationship(
+        back_populates="workflow_pattern"
+    )
 
 
 class PatternEdgeTrigger(str, Enum):
@@ -57,22 +60,23 @@ class PatternNode(SQLModel, table=True):
     category: str
     is_active: bool = Field(default=True)
 
-    prev: list["patternnode"] = Relationship(
+    prev: list["PatternNode"] = Relationship(
         link_model=PatternEdge,
         back_populates="next",
         sa_relationship_kwargs=dict(
-            primaryjoin="patternnode.id==patternedge.next_id",
-            secondaryjoin="patternnode.id==patternedge.prev_id",
+            primaryjoin="PatternNode.id==PatternEdge.next_id",
+            secondaryjoin="PatternNode.id==PatternEdge.prev_id",
         ),
     )
-    next: list["patternnode"] = Relationship(
+    next: list["PatternNode"] = Relationship(
         link_model=PatternEdge,
         back_populates="prev",
         sa_relationship_kwargs=dict(
-            primaryjoin="patternnode.id==patternedge.prev_id",
-            secondaryjoin="patternnode.id==patternedge.next_id",
+            primaryjoin="PatternNode.id==PatternEdge.prev_id",
+            secondaryjoin="PatternNode.id==PatternEdge.next_id",
         ),
     )
+    # /!\ In joins, use pascal case for tables, because it's at the ORM/python level
 
     dataform_pydantic_str: str
     # `dataform_pydantic_str` corresponds to an existing pydantic BaseModel which

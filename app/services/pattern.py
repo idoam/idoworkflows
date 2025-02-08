@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from models import Pattern, PatternStep
+from models import WorkflowPattern
 from schemas.pattern import *
 from sqlmodel import Session, func, select
 
@@ -12,9 +12,9 @@ class PatternService:
 
     def create_pattern(
         self,
-        pattern_create: PatternCreate,
-    ) -> Pattern:
-        pattern = Pattern(
+        pattern_create: WorkflowPatternCreate,
+    ) -> WorkflowPattern:
+        pattern = WorkflowPattern(
             name=pattern_create.name,
             description=pattern_create.description,
             is_active=pattern_create.is_active,
@@ -28,32 +28,28 @@ class PatternService:
         self,
         limit: int = 10,
         offset: int = 0,
-    ) -> GetPatternsResponse:
-        patterns = self.session.exec(select(Pattern).offset(offset).limit(limit)).all()
-        count = self.session.exec(select(func.count(Pattern.id))).one()
-
-        steps = self.session.exec(select(PatternStep)).all()
-        for step in steps:
-            print(step.name, step.next, step.prev)
-
+    ) -> GetWorkflowPatternsResponse:
+        patterns = self.session.exec(
+            select(WorkflowPattern).offset(offset).limit(limit)
+        ).all()
+        count = self.session.exec(select(func.count(WorkflowPattern.id))).one()
         return {"count": count, "patterns": patterns}
         # return GetPatternsResponse(count=count, patterns=patterns)
 
-    def get_pattern(self, pattern_id: int) -> PatternPublic:
-        pattern: Pattern | None = self.session.get(Pattern, pattern_id)
+    def get_pattern(self, pattern_id: int) -> WorkflowPatternPublic:
+        pattern: WorkflowPattern | None = self.session.get(WorkflowPattern, pattern_id)
         if not pattern:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Pattern not found"
             )
-
         return pattern
 
     def partial_update_pattern(
         self,
         pattern_id: int,
-        pattern_partial_update: PatternPartialUpdate,
-    ) -> PatternPublic:
-        pattern: Pattern | None = self.session.get(Pattern, pattern_id)
+        pattern_partial_update: WorkflowPatternPartialUpdate,
+    ) -> WorkflowPatternPublic:
+        pattern: WorkflowPattern | None = self.session.get(WorkflowPattern, pattern_id)
         if not pattern:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Pattern not found"
@@ -67,9 +63,9 @@ class PatternService:
     def update_pattern(
         self,
         pattern_id: int,
-        pattern_update: PatternUpdate,
-    ) -> PatternPublic:
-        pattern: Pattern | None = self.session.get(Pattern, pattern_id)
+        pattern_update: WorkflowPatternUpdate,
+    ) -> WorkflowPatternPublic:
+        pattern: WorkflowPattern | None = self.session.get(WorkflowPattern, pattern_id)
         if not pattern:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Record not found"
@@ -84,7 +80,7 @@ class PatternService:
         self,
         pattern_id: int,
     ) -> None:
-        pattern: Pattern | None = self.session.get(Pattern, pattern_id)
+        pattern: WorkflowPattern | None = self.session.get(WorkflowPattern, pattern_id)
         if not pattern:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Pattern not found"

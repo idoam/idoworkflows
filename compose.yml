@@ -10,6 +10,7 @@ services:
       - POSTGRES_PASSWORD=admin
       - POSTGRES_USER=admin
       - POSTGRES_DB=postgres
+    restart: unless-stopped
 
   adminer:
     image: adminer
@@ -17,6 +18,7 @@ services:
       - postgres
     ports:
       - 127.0.0.1:9000:8080
+    restart: unless-stopped
 
   keycloak:
     image: quay.io/keycloak/keycloak
@@ -27,6 +29,7 @@ services:
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+    restart: unless-stopped
     command: start-dev
 
 volumes:

@@ -12,7 +12,7 @@ class WorkflowInstance(SQLModel, table=True):
         default=None,
         foreign_key="workflowpattern.id",
     )
-    workflow_pattern: WorkflowPattern | None = Relationship(back_populates="nodes")
+    workflow_pattern: WorkflowPattern | None = Relationship(back_populates="instances")
 
     created_at: datetime
     created_by: str
