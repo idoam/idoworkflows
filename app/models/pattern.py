@@ -11,7 +11,7 @@ class WorkflowPattern(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str
     description: str | None = None
-    is_active: bool = Field(default=True)
+    is_active: bool = True
     nodes: list["PatternNode"] = Relationship(back_populates="workflow_pattern")
     instances: list["WorkflowInstance"] = Relationship(
         back_populates="workflow_pattern"
@@ -58,7 +58,7 @@ class PatternNode(SQLModel, table=True):
     name: str
     description: str | None = None
     category: str
-    is_active: bool = Field(default=True)
+    is_active: bool = True
 
     prev: list["PatternNode"] = Relationship(
         link_model=PatternEdge,

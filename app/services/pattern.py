@@ -68,7 +68,7 @@ class PatternService:
         pattern: WorkflowPattern | None = self.session.get(WorkflowPattern, pattern_id)
         if not pattern:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Record not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Pattern not found"
             )
         pattern_update__data = pattern_update.model_dump()
         pattern.sqlmodel_update(pattern_update__data)
