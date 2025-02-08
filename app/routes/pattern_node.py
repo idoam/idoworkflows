@@ -31,7 +31,7 @@ def create_pattern_node(
 def get_pattern_node(
     pattern_node_id: int,
     session: Session = Depends(get_session),
-) -> PatternNodePublic:
+) -> PatternNodePublicExtended:
     return PatternNodeService(session).get_pattern_node(pattern_node_id)
 
 

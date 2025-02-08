@@ -30,6 +30,11 @@ class PatternEdge(SQLModel, table=True):
     brief: Links PatternNodes to create a dependency graph.
     """
 
+    id: int = Field(
+        default=None,
+        primary_key=True,
+        sa_column_kwargs={"autoincrement": True},
+    )
     prev_id: int | None = Field(
         default=None,
         foreign_key="patternnode.id",

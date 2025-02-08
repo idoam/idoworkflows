@@ -37,9 +37,8 @@ class PatternNodeService:
         ).all()
         count = self.session.exec(select(func.count(PatternNode.id))).one()
         return {"count": count, "pattern_nodes": pattern_nodes}
-        # return GetPatternsResponse(count=count, patterns=patterns)
 
-    def get_pattern_node(self, pattern_node_id: int) -> PatternNodePublic:
+    def get_pattern_node(self, pattern_node_id: int) -> PatternNodePublicExtended:
         pattern_node: PatternNode | None = self.session.get(
             PatternNode, pattern_node_id
         )

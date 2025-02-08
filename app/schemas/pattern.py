@@ -1,6 +1,7 @@
 from typing import Sequence
 
 from pydantic import BaseModel
+from schemas.pattern_node import PatternNodeFromPattern
 
 
 class WorkflowPatternPublic(BaseModel):
@@ -8,6 +9,7 @@ class WorkflowPatternPublic(BaseModel):
     name: str
     description: str | None
     is_active: bool = True
+    nodes: list[PatternNodeFromPattern]
 
 
 class WorkflowPatternCreate(BaseModel):

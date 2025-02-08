@@ -3,6 +3,15 @@ from typing import Sequence
 from pydantic import BaseModel
 
 
+class PatternNodeFromPattern(BaseModel):
+    id: int
+    name: str
+    description: str | None = None
+    category: str
+    is_active: bool = True
+    dataform_pydantic_str: str
+
+
 class PatternNodePublic(BaseModel):
     id: int
     workflow_pattern_id: int
@@ -11,6 +20,18 @@ class PatternNodePublic(BaseModel):
     category: str
     is_active: bool = True
     dataform_pydantic_str: str
+
+
+class PatternNodePublicExtended(BaseModel):
+    id: int
+    workflow_pattern_id: int
+    name: str
+    description: str | None = None
+    category: str
+    is_active: bool = True
+    dataform_pydantic_str: str
+    prev: list[PatternNodePublic]
+    next: list[PatternNodePublic]
 
 
 class PatternNodeCreate(BaseModel):
@@ -39,5 +60,6 @@ class PatternNodePartialUpdate(BaseModel):
 
 
 class GetPatternNodesResponse(BaseModel):
+
     count: int
     pattern_nodes: Sequence[PatternNodePublic]
