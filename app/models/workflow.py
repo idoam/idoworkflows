@@ -32,8 +32,10 @@ class Edge(BaseModel):
 
     prev: Node
     next: Node
-    trigger: EdgeTrigger = EdgeTrigger.auto
     weight: int = 100
+    trigger: EdgeTrigger = EdgeTrigger.auto
+    name: str | None = None
+    description: str | None = None
 
 
 class Workflow(BaseModel):

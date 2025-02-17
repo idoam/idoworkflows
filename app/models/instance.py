@@ -21,6 +21,28 @@ class Instance(SQLModel, table=True):
         return workflows[self.workflow_id] if self.workflow_id in workflows else None
 
 
+class ElementEdge(SQLModel, table=True):
+    """
+    brief: Links Elements.
+    """
+
+    id: int = Field(
+        default=None,
+        primary_key=True,
+        sa_column_kwargs={"autoincrement": True},
+    )
+    prev_id: int | None = Field(
+        default=None,
+        foreign_key="element.id",
+        primary_key=True,
+    )
+    next_id: int | None = Field(
+        default=None,
+        foreign_key="element.id",
+        primary_key=True,
+    )
+
+
 class ElementStatus(str, Enum):
     ongoing = "ongoing"
     completed = "completed"
@@ -39,6 +61,23 @@ class Element(SQLModel, table=True):
     updated_by: str
 
     dataform: dict | None = Field(sa_column=Column(JSON), default_factory=dict)
+
+    prev: list["Element"] = Relationship(
+        link_model=ElementEdge,
+        back_populates="next",
+        sa_relationship_kwargs=dict(
+            primaryjoin="Element.id==ElementEdge.next_id",
+            secondaryjoin="Element.id==ElementEdge.prev_id",
+        ),
+    )
+    next: list["Element"] = Relationship(
+        link_model=ElementEdge,
+        back_populates="prev",
+        sa_relationship_kwargs=dict(
+            primaryjoin="Element.id==ElementEdge.prev_id",
+            secondaryjoin="Element.id==ElementEdge.next_id",
+        ),
+    )
 
     def get_node(self):
         return self.instance.get_workflow().get_node(self.node_id)

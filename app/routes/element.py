@@ -22,7 +22,7 @@ def create_element(
 def get_element(
     element_id: int,
     session: Session = Depends(get_session),
-) -> ElementPublic:
+) -> ElementPublicUnrolled:
     return ElementService(session).get_element(element_id)
 
 

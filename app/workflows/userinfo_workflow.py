@@ -30,8 +30,19 @@ def build_example_workflow():
             Edge(prev=a, next=b),
             Edge(prev=b, next=c),
             Edge(prev=b, next=d),
-            Edge(prev=c, next=b, trigger=EdgeTrigger.on_choice),
-            Edge(prev=c, next=e, trigger=EdgeTrigger.on_choice),
+            Edge(
+                prev=c,
+                next=b,
+                trigger=EdgeTrigger.on_choice,
+                name="Back to b",
+                description="Chosing this path will archive every element that was instanciated after b",
+            ),
+            Edge(
+                prev=c,
+                next=e,
+                trigger=EdgeTrigger.on_choice,
+                name="Continue through e",
+            ),
             Edge(prev=d, next=e),
         ],
     )

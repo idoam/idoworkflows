@@ -28,7 +28,7 @@ class ElementService:
         self.session.refresh(element)
         return element
 
-    def get_element(self, element_id: int) -> ElementPublic:
+    def get_element(self, element_id: int) -> ElementPublicUnrolled:
         element: Element | None = self.session.get(Element, element_id)
         if not element:
             raise HTTPException(
