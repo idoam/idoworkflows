@@ -39,6 +39,11 @@ class ElementCreate(BaseModel):
     node_id: int
 
 
+class ElementEdgeCreate(BaseModel):
+    prev_id: int
+    next_id: int
+
+
 class ElementPartialUpdate(BaseModel):
     status: str | None = None
     dataform: dict | None = None

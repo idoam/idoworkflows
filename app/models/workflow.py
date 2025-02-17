@@ -16,6 +16,13 @@ class Node(BaseModel):
     is_active: bool = True
     hooks: list[Callable] | None = None
     dataform_model: Callable | None = None
+    __workflow: BaseModel | None = None
+
+    def get_workflow(self):
+        return self.__workflow
+
+    def set_workflow(self, workflow: BaseModel):
+        self.__workflow = workflow
 
 
 class EdgeTrigger(str, Enum):
@@ -57,13 +64,26 @@ class Workflow(BaseModel):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        # Link nodes to workflow
+        for node in self.nodes:
+            node.set_workflow(self)
+
         # Build static cache
         self.__prev_map = {
-            node.id: [edge.prev for edge in self.edges if edge.next is node]
+            node.id: [
+                edge.prev
+                for edge in self.edges
+                if edge.next is node and edge.trigger == EdgeTrigger.auto
+            ]
             for node in self.nodes
         }
         self.__next_map = {
-            node.id: [edge.next for edge in self.edges if edge.prev is node]
+            node.id: [
+                edge.next
+                for edge in self.edges
+                if edge.prev is node and edge.trigger == EdgeTrigger.auto
+            ]
             for node in self.nodes
         }
         self.__node_by_id_map = {node.id: node for node in self.nodes}
@@ -75,3 +95,6 @@ class Workflow(BaseModel):
 
     def get_initial_nodes(self) -> list[Node]:
         return [node for node in self.nodes if not self.__prev_map[node.id]]
+
+    def get_next_nodes(self, node_id: int) -> list[Node]:
+        return self.__next_map[node_id]

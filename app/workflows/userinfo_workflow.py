@@ -8,6 +8,8 @@ class PrintHook(HookBase):
 
 
 def build_example_workflow():
+    workflow_id = 0
+
     a = Node(
         id=1,
         name="a",
