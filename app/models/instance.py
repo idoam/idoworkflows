@@ -48,16 +48,16 @@ class ElementStatus(str, Enum):
     validated = "validated"
     archived = "archived"
 
-
-def is_legal_transition(from_status, to_status):
-    status = ElementStatus
-    allowed_transitions = {
-        status.ongoing: [status.completed, status.archived],
-        status.completed: [status.ongoing, status.validated, status.archived],
-        status.validated: [status.archived],
-        status.archived: [],
-    }
-    return from_status == to_status or to_status in allowed_transitions[from_status]
+    @staticmethod
+    def is_legal_transition(from_status, to_status):
+        status = ElementStatus
+        allowed_transitions = {
+            status.ongoing: [status.completed, status.archived],
+            status.completed: [status.ongoing, status.validated, status.archived],
+            status.validated: [status.archived],
+            status.archived: [],
+        }
+        return from_status == to_status or to_status in allowed_transitions[from_status]
 
 
 class Element(SQLModel, table=True):
