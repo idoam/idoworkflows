@@ -1,6 +1,6 @@
 from enum import Enum
-from typing import Callable
 
+from models.bases import DataFormBase, HookBase
 from pydantic import BaseModel
 
 
@@ -14,8 +14,8 @@ class Node(BaseModel):
     description: str | None = None
     category: str
     is_active: bool = True
-    hooks: list[Callable] | None = None
-    dataform_model: Callable | None = None
+    hooks: list[type[HookBase]] | None = None
+    dataform_model: type[DataFormBase] | None = None
     __workflow: BaseModel | None = None
 
     def get_workflow(self):

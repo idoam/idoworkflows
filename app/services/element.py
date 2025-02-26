@@ -1,7 +1,15 @@
 from datetime import datetime
 
 from fastapi import HTTPException, status
-from models import Element, ElementEdge, ElementStatus, Instance, Node, Workflow
+from models import (
+    DataFormBase,
+    Element,
+    ElementEdge,
+    ElementStatus,
+    Instance,
+    Node,
+    Workflow,
+)
 from pydantic import ValidationError
 from schemas.element import *
 from sqlmodel import Session
@@ -62,7 +70,7 @@ class ElementService:
         element_node: Node = element.get_node()
 
         # Validate dataform
-        element_node_dataform: BaseModel | None = element_node.dataform_model
+        element_node_dataform: DataFormBase | None = element_node.dataform_model
         if not element_node_dataform and element_partial_update.dataform is not None:
             raise HTTPException(
                 status_code=status.HTTP_424_FAILED_DEPENDENCY,
