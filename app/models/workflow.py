@@ -16,19 +16,30 @@ class Node(BaseModel):
     is_active: bool = True
     hooks: list[type[HookBase]] | None = None
     dataform_model: type[DataFormBase] | None = None
-    __workflow: BaseModel | None = None
+    __workflow: "Workflow" = None
 
-    def get_workflow(self):
+    def get_workflow(self) -> "Workflow":
         return self.__workflow
 
-    def set_workflow(self, workflow: BaseModel):
+    def set_workflow(self, workflow: "Workflow"):
         self.__workflow = workflow
 
+    def get_next_auto_nodes(self):
+        return self.__workflow.get_next_nodes(self.id)
 
+    def get_next_on_choice_candidate_nodes(self):
+        return [
+            edge.next
+            for edge in self.__workflow.edges
+            if edge.prev == self and edge.trigger == EdgeTrigger.on_choice
+        ]
+
+
+# TODO put enums in a separate file to avoid circular imports, bypassed by using plain strings
 class EdgeTrigger(str, Enum):
     auto = "auto"  # Unlocks `next` on prev validation status.
     on_choice = (
-        "on_choice"  # Like `auto`, if user chose this path from all possible edges.
+        "on_choice"  # Like `auto`, if user chose this path among all possible edges.
     )
 
 

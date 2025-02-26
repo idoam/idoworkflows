@@ -9,7 +9,6 @@ from models import (
     Instance,
     Node,
     Workflow,
-    is_legal_transition,
 )
 from pydantic import ValidationError
 from schemas.element import *
@@ -97,6 +96,30 @@ class ElementService:
                     detail=f"Illegal transition from {update_status} to {base_status}",
                 )
 
+    @staticmethod
+    def check_next_node_ids(
+        node: Node,
+        update_status: str,
+        next_node_ids: list[int] | None,
+    ):
+        if update_status != ElementStatus.validated:
+            if next_node_ids:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Unexpected next_node_ids field. Must only be sent along a 'validated' status update",
+                )
+            return
+
+        node_next_candidate_ids = [
+            node.id for node in node.get_next_on_choice_candidate_nodes()
+        ]
+        for next_node_id in next_node_ids:
+            if next_node_id not in node_next_candidate_ids:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Illegal next_node_id #{next_node_id} from node #{node.id}.",
+                )
+
     def partial_update_element(
         self,
         element_id: int,
@@ -113,6 +136,9 @@ class ElementService:
         # Validate update data
         self.check_dataform(element_node.dataform_model, element_update.dataform)
         self.check_status(element.status, element_update.status)
+        self.check_next_node_ids(
+            element_node, element_update.status, element_update.next_node_ids
+        )
 
         old_status = element.status
         element_patch_data = element_update.model_dump(exclude_unset=True)
@@ -128,26 +154,39 @@ class ElementService:
 
             # If the new status is validated
             if element.status == ElementStatus.validated:
-                # FIXME Archive previously instantiated next elements
+                element_instance: Instance = element.instance
 
-                # Generate auto-next elements
-                for n in element_node.get_workflow().get_next_nodes(element_node.id):
+                element_next_node_ids = [
+                    n.id for n in element_node.get_next_auto_nodes()
+                ] + element_update.next_node_ids
+
+                # Archive override elements (looping case scenario)
+                for old_element in [
+                    instance_element
+                    for instance_element in element_instance.elements
+                    if instance_element.node_id in element_next_node_ids
+                ]:
+                    self.partial_update_element(
+                        old_element.id,
+                        ElementPartialUpdate(status=ElementStatus.archived),
+                    )
+
+                # Generate next elements
+                for n_id in element_next_node_ids:
                     next_element = self.create_element(
-                        ElementCreate(node_id=n.id, instance_id=element.instance.id)
+                        ElementCreate(node_id=n_id, instance_id=element_instance.id)
                     )
                     self.create_element_edge(
                         ElementEdgeCreate(prev_id=element.id, next_id=next_element.id)
                     )
-                # FIXME Generate condition-based-next elements
 
             # If the new status is archived
             elif element.status == ElementStatus.archived:
-                # Archive auto-next elements
+                # Archive next elements (, recursively...)
                 for n in element.next:
                     self.partial_update_element(
                         n.id, ElementPartialUpdate(status=ElementStatus.archived)
                     )
-                # FIXME Archive condition-based-next elements
 
             self.session.refresh(element)
         return element

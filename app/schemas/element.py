@@ -47,3 +47,4 @@ class ElementEdgeCreate(BaseModel):
 class ElementPartialUpdate(BaseModel):
     status: str | None = None
     dataform: dict | None = None
+    next_node_ids: list[int] | None = None

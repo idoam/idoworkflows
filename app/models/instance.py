@@ -40,6 +40,7 @@ class ElementEdge(SQLModel, table=True):
         foreign_key="element.id",
         primary_key=True,
     )
+    trigger: str = "auto"
 
 
 class ElementStatus(str, Enum):
