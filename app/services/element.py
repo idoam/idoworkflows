@@ -9,6 +9,7 @@ from models import (
     Instance,
     Node,
     Workflow,
+    is_legal_transition,
 )
 from pydantic import ValidationError
 from schemas.element import *
@@ -82,7 +83,7 @@ class ElementService:
             except ValidationError:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Dataform does not match",
+                    detail="Dataform does not match",
                 )
 
         # Validate status
@@ -94,7 +95,11 @@ class ElementService:
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=f"{update_status} is not a valid element status",
                 )
-            # FIXME Invalidate illegal status changes
+            if not is_legal_transition(element.status, update_status):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Illegal transition from {update_status} to {element.status}",
+                )
 
         old_status = element.status
         element_patch_data = element_partial_update.model_dump(exclude_unset=True)
