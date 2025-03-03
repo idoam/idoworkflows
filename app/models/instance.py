@@ -1,10 +1,20 @@
 from datetime import datetime
-from enum import Enum
 
 from sqlmodel import JSON, Column, Field, Relationship, SQLModel
+from utils.enums import EdgeTrigger, ElementStatus
+
+"""
+desc: Instances are occurrences of a workflow. They store an *element* for every node defined by
+      the latter, containing end-user data as well as any graph-routing choice made by the user
+      (represented by ElementEdges).
+"""
 
 
 class Instance(SQLModel, table=True):
+    """
+    brief: An instance of a workflow.
+    """
+
     id: int = Field(default=None, primary_key=True)
     workflow_id: int
 
@@ -40,28 +50,14 @@ class ElementEdge(SQLModel, table=True):
         foreign_key="element.id",
         primary_key=True,
     )
-    trigger: str = "auto"
-
-
-class ElementStatus(str, Enum):
-    ongoing = "ongoing"
-    completed = "completed"
-    validated = "validated"
-    archived = "archived"
-
-    @staticmethod
-    def is_legal_transition(from_status, to_status):
-        status = ElementStatus
-        allowed_transitions = {
-            status.ongoing: [status.completed, status.archived],
-            status.completed: [status.ongoing, status.validated, status.archived],
-            status.validated: [status.archived],
-            status.archived: [],
-        }
-        return from_status == to_status or to_status in allowed_transitions[from_status]
+    trigger: str = EdgeTrigger.auto
 
 
 class Element(SQLModel, table=True):
+    """
+    brief: An instance of a node. Contains end-user data.
+    """
+
     id: int = Field(default=None, primary_key=True)
     instance_id: int | None = Field(default=None, foreign_key="instance.id")
     instance: Instance | None = Relationship(back_populates="elements")

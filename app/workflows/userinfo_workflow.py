@@ -1,5 +1,6 @@
-from models import Edge, EdgeTrigger, HookBase, Node, Workflow
+from models import Edge, HookBase, Node, Workflow
 from schemas import UserInfoCreate
+from utils.enums import EdgeTrigger
 
 
 class PrintHook(HookBase):
@@ -8,8 +9,6 @@ class PrintHook(HookBase):
 
 
 def build_example_workflow():
-    workflow_id = 0
-
     a = Node(
         id=1,
         name="a",
@@ -37,7 +36,7 @@ def build_example_workflow():
                 next=b,
                 trigger=EdgeTrigger.on_choice,
                 name="Back to b",
-                description="Chosing this path will archive every element that was instanciated after b",
+                description="Choosing this path will archive every element that was instantiated after b",
             ),
             Edge(
                 prev=c,

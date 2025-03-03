@@ -1,5 +1,10 @@
-from models import Element, ElementStatus
+from models import Element
 from pydantic import BaseModel
+from utils.enums import ElementStatus
+
+"""
+desc: Contains base models to enforce strong typing and ensure model method definitions.
+"""
 
 
 class HookBase(BaseModel):

@@ -1,18 +1,17 @@
 from datetime import datetime
 
 from fastapi import HTTPException, status
-from models import (
-    DataFormBase,
-    Element,
-    ElementEdge,
-    ElementStatus,
-    Instance,
-    Node,
-    Workflow,
-)
+from models import DataFormBase, Element, ElementEdge, Instance, Node
 from pydantic import ValidationError
-from schemas.element import *
+from schemas.element import (
+    ElementCreate,
+    ElementEdgeCreate,
+    ElementPartialUpdate,
+    ElementPublic,
+    ElementPublicUnrolled,
+)
 from sqlmodel import Session
+from utils.enums import ElementStatus
 
 
 class ElementService:
@@ -106,7 +105,8 @@ class ElementService:
             if next_node_ids:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail="Unexpected next_node_ids field. Must only be sent along a 'validated' status update",
+                    detail="Unexpected next_node_ids field."
+                    "Must only be sent along a 'validated' status update",
                 )
             return
 
